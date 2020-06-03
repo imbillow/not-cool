@@ -6,6 +6,19 @@ sourceSets {
     }
 }
 
+task grading(type: Exec) {
+    //workingDir '.'
+    commandLine 'perl', 'pa1-grading.pl'
+    //args '', ''
+    //store the output instead of printing to the console:
+    standardOutput = new ByteArrayOutputStream()
+
+    //extension method stopTomcat.output() can be used to obtain the output:
+    ext.output = {
+        return standardOutput.toString()
+    }
+}
+
 task generateLexer(type: GenerateLexer) {
     // source flex file
     source = "cool.lex"
