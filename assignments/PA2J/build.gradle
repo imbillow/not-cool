@@ -2,17 +2,13 @@ import org.jetbrains.grammarkit.tasks.GenerateLexer
 
 sourceSets {
     main {
-        java.srcDir(".")
+        java.srcDirs = ["."]
     }
 }
 
-tasks.register<GenerateLexer>("generateLexer") {
-    val jlex = project.configurations.compileOnly.files
-            .filter { it.name.startsWith("jflex") }
-    classpath(jlex)
-
+task generateLexer(type: GenerateLexer) {
     // source flex file
-    source = "cool.flex"
+    source = "cool.lex"
 
     // target directory for lexer
     targetDir = "./"

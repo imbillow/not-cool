@@ -23,6 +23,6 @@ buildscript {
 }
 
 subprojects {
-    apply(plugin = "java")
-    apply(plugin = "org.jetbrains.grammarkit")
+    apply plugin: "java"
+    apply plugin: "org.jetbrains.grammarkit"
 }

@@ -9,10 +9,7 @@
 
 rootProject.name = "notCool"
 
-java.nio.file.Files
-        .list(file("assignments").toPath())
-        .filter { it.toString().matches(Regex(".*J")) }
-        .forEach {
-            include(it.fileName.toString())
-            project(":${it.fileName}").projectDir = it.toFile()
-        }
+file("assignments").eachDirMatch(~/.*J/) {
+    include(it.name)
+    project(":${it.name}").projectDir = it
+}
