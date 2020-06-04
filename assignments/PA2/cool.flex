@@ -8,13 +8,16 @@
  * to the code in the file.  Don't remove anything that was here initially
  */
 %{
-#include <cool-parse.h>
-#include <stringtab.h>
-#include <utilities.h>
+#include "cool-parse.h"
+#include "stringtab.h"
+#include "utilities.h"
+
+#define YY_DECL int cool_yylex(void)
+extern int cool_yylex();
 
 /* The compiler assumes these identifiers. */
 #define yylval cool_yylval
-#define yylex  cool_yylex
+// #define yylex  cool_yylex
 
 /* Max size of string constants */
 #define MAX_STR_CONST 1025
@@ -67,7 +70,9 @@ DARROW          =>
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
-
+if|else {
+  printf("Hello world");
+}
 
  /*
   *  String constants (C syntax)

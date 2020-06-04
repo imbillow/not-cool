@@ -13,7 +13,7 @@
 // This file defines the basic class of tree node and list
 //
 ///////////////////////////////////////////////////////////////////////////
- 
+
 
 #include "stringtab.h"
 #include "cool-io.h"

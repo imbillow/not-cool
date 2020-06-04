@@ -79,7 +79,7 @@ typedef Cases_class *Cases;
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
+#define YYTOKENTYPE
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
@@ -144,7 +144,7 @@ typedef Cases_class *Cases;
 
 
 
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 #line 46 "cool.y"
 {
@@ -166,9 +166,9 @@ typedef union YYSTYPE
 /* Line 1489 of yacc.c.  */
 #line 124 "cool.tab.h"
 	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE cool_yylval;
@@ -181,9 +181,9 @@ typedef struct YYLTYPE
   int last_line;
   int last_column;
 } YYLTYPE;
-# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
+#define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+#define YYLTYPE_IS_DECLARED 1
+#define YYLTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYLTYPE cool_yylloc;
