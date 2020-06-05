@@ -88,10 +88,10 @@ typedef Cases_class *Cases;
      FI = 260,
      IF = 261,
      IN = 262,
-     INHERITS = 263,
+     INHERITS = 263, // inherits
      LET = 264,
      LOOP = 265,
-     POOL = 266,
+     POOL = 266, // pool loop wsl
      THEN = 267,
      WHILE = 268,
      CASE = 269,

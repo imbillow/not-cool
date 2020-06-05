@@ -52,8 +52,36 @@ extern YYSTYPE cool_yylval;
  * Define names for regular expressions here.
  */
 
-DARROW =>
+DARROW    =>
+ASSIGN    <-
+LE        <=
 
+CLASS     class
+IF        if
+FI        fi
+ELSE      else
+INHERITS  inherits
+LOOP      loop
+POOL      pool
+THEN      then
+WHILE     while
+CASE      case
+ESAC      esac
+OF        of
+NEW       new
+ISVOID    isvoid
+
+BOOL_CONST true|false
+
+
+capital   [A-Z]
+lower     [a-z]
+number    [0-9]
+alpha     {capital}|{lower}
+alnum     {alpha}|{number}
+
+TYPEID    {capital}{alnum}*
+OBJECTID  {lower}{alnum}*
 
 %%
 
@@ -65,15 +93,33 @@ DARROW =>
  /*
   *  The multiple-character operators.
   */
-{DARROW}		{ return (DARROW); }
+{DARROW}  { return (DARROW); }
+{ASSIGN}  { return (ASSIGN); }
+{LE}      { return (LE); }
 
  /*
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
-if|else {
-  printf("Hello world");
-}
+
+{CLASS}       { return (CLASS); }
+{IF}          { return (IF); }
+{FI}          { return (IF); }
+{ELSE}        { return (ELSE); }
+{INHERITS}    { return (INHERITS); }
+{LOOP}        { return (LOOP); }
+{POOL}        { return (POOL); }
+{THEN}        { return (THEN); }
+{WHILE}       { return (WHILE);}
+{CASE}        { return (CASE); }
+{ESAC}        { return (ESAC); }
+{OF}          { return (OF); }
+{NEW}         { return (NEW); }
+{ISVOID}      { return (ISVOID); }
+{BOOL_CONST}  { return (BOOL_CONST); }
+
+{TYPEID}      { return (TYPEID); }
+{OBJECTID}    { return (OBJECTID); }
 
  /*
   *  String constants (C syntax)
@@ -83,6 +129,5 @@ if|else {
   */
 
 [0-9] {printf("digit");}
-. { printf("Unknow word"); }
 
 %%
