@@ -52,7 +52,8 @@ extern YYSTYPE cool_yylval;
  * Define names for regular expressions here.
  */
 
-DARROW          =>
+DARROW =>
+
 
 %%
 
@@ -76,10 +77,12 @@ if|else {
 
  /*
   *  String constants (C syntax)
-  *  Escape sequence \c is accepted for all characters c. Except for 
+  *  Escape sequence \c is accepted for all characters c. Except for
   *  \n \t \b \f, the result is c.
   *
   */
 
+[0-9] {printf("digit");}
+. { printf("Unknow word"); }
 
 %%
