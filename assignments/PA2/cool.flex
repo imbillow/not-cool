@@ -45,11 +45,21 @@ extern YYSTYPE cool_yylval;
  *  Add Your own definitions here
  */
 
+int comment_nested;
+
 char* unescape_string(const char *s)
 {
   std::stringstream ss{};
   bool escape{false};
+  size_t index = 0,
+         end = strlen(s) - 1;
   while (*s) {
+    if(index == 0 || index == end){
+      index++;
+      s++;
+      continue;
+    }
+
     switch (*s) {
       case '\\' :
         if(escape){
@@ -75,6 +85,8 @@ char* unescape_string(const char *s)
         ss << *s;
         break;
     }
+
+    index++;
     s++;
   }
 
@@ -89,6 +101,7 @@ char* unescape_string(const char *s)
  */
 
 %Start COMMENT
+%Start STRING
 
 
 COMMENT_S \(\*
@@ -109,14 +122,27 @@ number    {digit}+
 
 %%
 
+--.* ;
+
  /*
   *  Nested comments
   */
 
---.* ;
+{COMMENT_S} {
+  comment_nested++;
+  BEGIN COMMENT;
+}
 
-{COMMENT_S}.* {}
-{COMMENT_E} {}
+<COMMENT>.*{COMMENT_E} {
+  comment_nested--;
+  if(comment_nested == 0){
+    BEGIN 0;
+  } else if(comment_nested < 0){
+    // TODO: error
+  }
+}
+
+<COMMENT>.* ;
 
 
  /*
@@ -137,6 +163,7 @@ number    {digit}+
 (?i:in)          return IN;
 (?i:else)        return ELSE;
 (?i:inherits)    return INHERITS;
+(?i:let)         return LET;
 (?i:loop)        return LOOP;
 (?i:pool)        return POOL;
 (?i:then)        return THEN;
@@ -162,12 +189,12 @@ f(?i:alse) {
   return INT_CONST;
 }
 
-{capital}{aldig_}+ {
+{capital}{aldig_}* {
   yylval.symbol = idtable.add_string(yytext);
   return TYPEID;
 }
 
-{lower}{aldig_}+ {
+{lower}{aldig_}* {
   yylval.symbol = idtable.add_string(yytext);
   return OBJECTID;
 }
@@ -183,17 +210,24 @@ f(?i:alse) {
 
 [ \t\b\f] ;
 
-\'.\' {
+\'\\?.\' {
   yylval.symbol = stringtable.add_string(unescape_string(yytext));
   return STR_CONST;
 }
 
-\"[^\n\0]+\" {
+\" {
+  BEGIN STRING;
+}
+
+<STRING>.*\" {
+  BEGIN 0;
+}
+
+\"[^\n\0]*\" {
   yylval.symbol = stringtable.add_string(unescape_string(yytext));
   return STR_CONST;
 }
 
-[(){}\[\]<>=:;+-\.] return yytext[0];
-
+[(){}<>=:;+-~\.\[\]\*\/] return yytext[0];
 
 %%
