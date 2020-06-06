@@ -9,6 +9,7 @@
  */
 %{
 #include <sstream>
+#include <algorithm>
 #include <cstring>
 #include "cool-parse.h"
 #include "stringtab.h"
@@ -51,8 +52,6 @@ char* unescape_string(const char *s)
 {
   std::stringstream ss{};
   bool escape{false};
-  size_t index = 0,
-         end = strlen(s) - 1;
   while (*s) {
     switch (*s) {
       case '\\' :
@@ -79,16 +78,11 @@ char* unescape_string(const char *s)
         }
         escape = false;
         break;
-      case '\0':
-        return nullptr;
-        break;
       default:
         escape = false;
         ss << *s;
         break;
     }
-
-    index++;
     s++;
   }
 
@@ -122,6 +116,7 @@ aldig_    {aldig}|_
 space     [ \t]
 
 number    {digit}+
+character [^"\0\n]
 
 %%
 
@@ -132,21 +127,28 @@ number    {digit}+
   */
 
 {COMMENT_S} {
-  comment_nested++;
+  comment_nested ++;
   BEGIN COMMENT;
 }
 
 <COMMENT>.*{COMMENT_E}{space}* {
   comment_nested--;
-  if(comment_nested == 0){
+  if(comment_nested <= 0){
     BEGIN 0;
-  } else if(comment_nested < 0){
-    // TODO: error
+    comment_nested = 0;
   }
 }
 
 <COMMENT>.+ ;
 
+<COMMENT><<EOF>> {
+  yylval.error_msg = "‘EOF in comment";
+  BEGIN 0;
+}
+
+{COMMENT_E} {
+  yylval.error_msg = "‘Unmatched *)";
+}
 
  /*
   *  The multiple-character operators.
@@ -218,15 +220,21 @@ f(?i:alse) {
   return STR_CONST;
 }
 
-<STRING>[^"\n\\]*\" {
+<STRING>{character}*\" {
+  auto sz = string_buf_ptr - string_buf;
+  if(sz + yyleng > MAX_STR_CONST){
+    yylval.error_msg = "String constant too long";
+  }
+
   char* str = strdup(yytext);
   str[yyleng-1] = '\0';
-  strcat(string_buf,str);
+  strcat(string_buf, str);
   string_buf_ptr += yyleng - 1;
+  sz = string_buf_ptr - string_buf;
 
   BEGIN 0;
   yylval.symbol = stringtable.add_string(unescape_string(string_buf));
-  memset(string_buf, '\0', string_buf_ptr - string_buf);
+  memset(string_buf, '\0', std::min(sz, static_cast<decltype(sz)>(MAX_STR_CONST)));
   string_buf_ptr = string_buf;
   return STR_CONST;
 }
@@ -242,18 +250,21 @@ f(?i:alse) {
 }
 
 <STRING>\n {
-  //TODO err
+  yylval.error_msg = "Unterminated string constant";
+  BEGIN 0;
 }
 
-<STRING>\0 {
-  //TODO err
+<STRING>\0.*\"|\n {
+  yylval.error_msg = "String contains null character";
+  BEGIN 0;
 }
 
 <STRING><<EOF>> {
-  //TODO err
+  yylval.error_msg = "EOF in string constant";
+  BEGIN 0;
 }
 
-<STRING>[^"\n]+ {
+<STRING>{character}+ {
   strcat(string_buf, yytext);
   string_buf_ptr += yyleng;
 }
