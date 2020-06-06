@@ -54,12 +54,6 @@ char* unescape_string(const char *s)
   size_t index = 0,
          end = strlen(s) - 1;
   while (*s) {
-    if(index == 0 || index == end){
-      index++;
-      s++;
-      continue;
-    }
-
     switch (*s) {
       case '\\' :
         if(escape){
@@ -74,6 +68,14 @@ char* unescape_string(const char *s)
           ss << 'n';
         } else {
           ss << '\n';
+        }
+        escape = false;
+        break;
+      case 't':
+        if (!escape){
+          ss << 't';
+        } else {
+          ss << '\t';
         }
         escape = false;
         break;
@@ -223,7 +225,7 @@ f(?i:alse) {
   string_buf_ptr += yyleng - 1;
 
   BEGIN 0;
-  yylval.symbol = stringtable.add_string(string_buf);
+  yylval.symbol = stringtable.add_string(unescape_string(string_buf));
   memset(string_buf, '\0', string_buf_ptr - string_buf);
   string_buf_ptr = string_buf;
   return STR_CONST;
@@ -234,14 +236,13 @@ f(?i:alse) {
   string_buf_ptr = string_buf;
 }
 
-<STRING>\\["0] {
-  strcat(string_buf, yytext+1);
-  string_buf_ptr += 1;
-}
-
 <STRING>\\[\nn] {
   strcat(string_buf, "\n");
   string_buf_ptr += 1;
+}
+
+<STRING>\n {
+  //TODO err
 }
 
 <STRING>\0 {
@@ -257,6 +258,6 @@ f(?i:alse) {
   string_buf_ptr += yyleng;
 }
 
-[(){}<>=:,;+\-*/~.\[\]] return yytext[0];
+[(){}<>=:,;@+\-*/~.\[\]] return yytext[0];
 
 %%
