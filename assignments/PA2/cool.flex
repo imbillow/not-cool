@@ -71,7 +71,7 @@ number    {digit}+
   *  Nested comments
   */
 
---.*          {}
+--.* ;
 
 {COMMENT_S}.* {}
 {COMMENT_E} {}
@@ -91,7 +91,8 @@ number    {digit}+
 
 (?i:class)       return CLASS;
 (?i:if)          return IF;
-(?i:fi)          return IF;
+(?i:fi)          return FI;
+(?i:in)          return IN;
 (?i:else)        return ELSE;
 (?i:inherits)    return INHERITS;
 (?i:loop)        return LOOP;
@@ -104,16 +105,30 @@ number    {digit}+
 (?i:new)         return NEW;
 (?i:isvoid)      return ISVOID;
 
-true|false  { return BOOL_CONST; }
-SELF_TYPE   { printf("#SELF_TYPE"); }
+t(?i:rue) { 
+  yylval.boolean = true;  
+  return BOOL_CONST;
+}
 
-{number}          {
+f(?i:alse) { 
+  yylval.boolean = false;  
+  return BOOL_CONST;
+}
+
+{number} {
   yylval.symbol = inttable.add_string(yytext);
   return INT_CONST;
 }
 
-{capital}{aldig_}+ {printf("#TYPEID ");}
-{lower}{aldig_}+  {printf("#OBJECTID ");}
+{capital}{aldig_}+ {
+  yylval.symbol = idtable.add_string(yytext);
+  return TYPEID;
+}
+
+{lower}{aldig_}+ {
+  yylval.symbol = idtable.add_string(yytext);
+  return OBJECTID;
+}
 
  /*
   *  String constants (C syntax)
@@ -122,8 +137,21 @@ SELF_TYPE   { printf("#SELF_TYPE"); }
   *
   */
 
-\n       { curr_lineno++; }
-\[tbf]   { return printf("%s",yylex); }
-\\w      { return printf("%s",yylex); }
+\n curr_lineno++;
+
+[ \t\b\f] ;
+
+\'.\' {
+  yylval.symbol = stringtable.add_string(yytext);
+  return STR_CONST;
+}
+
+\"[^\n\0]+\" {
+  yylval.symbol = stringtable.add_string(yytext);
+  return STR_CONST;
+}
+
+[(){}\[\]<>=:;+-\.] return yytext[0];
+
 
 %%
