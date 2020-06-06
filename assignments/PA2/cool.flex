@@ -37,6 +37,11 @@ extern FILE *fin; /* we read from this file */
 char string_buf[MAX_STR_CONST]; /* to assemble string constants */
 char *string_buf_ptr;
 
+inline void clear_buf(){
+  string_buf_ptr = string_buf;
+  *string_buf_ptr = '\0';
+}
+
 extern int curr_lineno;
 extern int verbose_flag;
 
@@ -78,6 +83,22 @@ char* unescape_string(const char *s)
         }
         escape = false;
         break;
+      case 'f':
+        if (!escape){
+          ss << 'f';
+        } else {
+          ss << '\f';
+        }
+        escape = false;
+        break;
+      case 'b':
+        if (!escape){
+          ss << 'b';
+        } else {
+          ss << '\b';
+        }
+        escape = false;
+        break;
       default:
         escape = false;
         ss << *s;
@@ -116,7 +137,7 @@ aldig_    {aldig}|_
 space     [ \t]
 
 number    {digit}+
-character [^"\0\n]
+character [^"\0\n\\]
 
 %%
 
@@ -144,10 +165,12 @@ character [^"\0\n]
 <COMMENT><<EOF>> {
   yylval.error_msg = "‘EOF in comment";
   BEGIN 0;
+  return ERROR;
 }
 
 {COMMENT_E} {
   yylval.error_msg = "‘Unmatched *)";
+  return ERROR;
 }
 
  /*
@@ -179,13 +202,13 @@ character [^"\0\n]
 (?i:new)         return NEW;
 (?i:isvoid)      return ISVOID;
 
-t(?i:rue) { 
-  yylval.boolean = true;  
+t(?i:rue) {
+  yylval.boolean = true;
   return BOOL_CONST;
 }
 
-f(?i:alse) { 
-  yylval.boolean = false;  
+f(?i:alse) {
+  yylval.boolean = false;
   return BOOL_CONST;
 }
 
@@ -211,19 +234,18 @@ f(?i:alse) {
   *
   */
 
-\n curr_lineno++;
-
-[ \t\b\f] ;
-
 \'\\?.\' {
   yylval.symbol = stringtable.add_string(unescape_string(yytext));
   return STR_CONST;
 }
 
 <STRING>{character}*\" {
+  BEGIN 0;
+
   auto sz = string_buf_ptr - string_buf;
   if(sz + yyleng > MAX_STR_CONST){
     yylval.error_msg = "String constant too long";
+    return ERROR;
   }
 
   char* str = strdup(yytext);
@@ -232,10 +254,8 @@ f(?i:alse) {
   string_buf_ptr += yyleng - 1;
   sz = string_buf_ptr - string_buf;
 
-  BEGIN 0;
-  yylval.symbol = stringtable.add_string(unescape_string(string_buf));
-  memset(string_buf, '\0', std::min(sz, static_cast<decltype(sz)>(MAX_STR_CONST)));
-  string_buf_ptr = string_buf;
+  yylval.symbol = stringtable.add_string(string_buf);
+  clear_buf();
   return STR_CONST;
 }
 
@@ -244,31 +264,58 @@ f(?i:alse) {
   string_buf_ptr = string_buf;
 }
 
-<STRING>\\[\nn] {
-  strcat(string_buf, "\n");
-  string_buf_ptr += 1;
+<STRING>\\(.|\n) {
+  char* ch = yytext+1;
+  char* outp;
+  switch(*ch){
+    case 'n': outp = "\n"; break;
+    case 't': outp = "\t"; break;
+    case 'f': outp = "\f"; break;
+    case 'b': outp = "\b"; break;
+    case '\n':
+      curr_lineno++;
+      outp = "\n";
+      break;
+    default:
+      outp = ch;
+  }
+  strcat(string_buf, outp);
+  string_buf_ptr++;
 }
 
 <STRING>\n {
+  curr_lineno++;
   yylval.error_msg = "Unterminated string constant";
+  //printf("strbuf %s\n",string_buf);
   BEGIN 0;
+  clear_buf();
+  return ERROR;
 }
 
-<STRING>\0.*\"|\n {
+<STRING>\0{character}*(\"|\n) {
   yylval.error_msg = "String contains null character";
   BEGIN 0;
+  clear_buf();
+  return ERROR;
 }
 
 <STRING><<EOF>> {
   yylval.error_msg = "EOF in string constant";
   BEGIN 0;
+  clear_buf();
+  return ERROR;
 }
 
 <STRING>{character}+ {
+  //printf("text %s\n",yytext);
   strcat(string_buf, yytext);
   string_buf_ptr += yyleng;
 }
 
 [(){}<>=:,;@+\-*/~.\[\]] return yytext[0];
+
+\n curr_lineno++;
+
+[ \t\b\f] ;
 
 %%
