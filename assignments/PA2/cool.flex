@@ -111,12 +111,13 @@ DARROW    =>
 ASSIGN    <-
 LE        <=
 
-capital   [A-Z]
+upper     [A-Z]
 lower     [a-z]
 digit     [0-9]
-alpha     {capital}|{lower}
+alpha     {upper}|{lower}
 aldig     {alpha}|{digit}
 aldig_    {aldig}|_
+space     [ \t]
 
 number    {digit}+
 
@@ -133,7 +134,7 @@ number    {digit}+
   BEGIN COMMENT;
 }
 
-<COMMENT>.*{COMMENT_E} {
+<COMMENT>.*{COMMENT_E}{space}* {
   comment_nested--;
   if(comment_nested == 0){
     BEGIN 0;
@@ -142,7 +143,7 @@ number    {digit}+
   }
 }
 
-<COMMENT>.* ;
+<COMMENT>.+ ;
 
 
  /*
@@ -189,7 +190,7 @@ f(?i:alse) {
   return INT_CONST;
 }
 
-{capital}{aldig_}* {
+{upper}{aldig_}* {
   yylval.symbol = idtable.add_string(yytext);
   return TYPEID;
 }
@@ -215,19 +216,47 @@ f(?i:alse) {
   return STR_CONST;
 }
 
-\" {
-  BEGIN STRING;
-}
+<STRING>[^"\n\\]*\" {
+  char* str = strdup(yytext);
+  str[yyleng-1] = '\0';
+  strcat(string_buf,str);
+  string_buf_ptr += yyleng - 1;
 
-<STRING>.*\" {
   BEGIN 0;
-}
-
-\"[^\n\0]*\" {
-  yylval.symbol = stringtable.add_string(unescape_string(yytext));
+  yylval.symbol = stringtable.add_string(string_buf);
+  memset(string_buf, '\0', string_buf_ptr - string_buf);
+  string_buf_ptr = string_buf;
   return STR_CONST;
 }
 
-[(){}<>=:;+-~\.\[\]\*\/] return yytext[0];
+\" {
+  BEGIN STRING;
+  string_buf_ptr = string_buf;
+}
+
+<STRING>\\["0] {
+  strcat(string_buf, yytext+1);
+  string_buf_ptr += 1;
+}
+
+<STRING>\\[\nn] {
+  strcat(string_buf, "\n");
+  string_buf_ptr += 1;
+}
+
+<STRING>\0 {
+  //TODO err
+}
+
+<STRING><<EOF>> {
+  //TODO err
+}
+
+<STRING>[^"\n]+ {
+  strcat(string_buf, yytext);
+  string_buf_ptr += yyleng;
+}
+
+[(){}<>=:,;+\-*/~.\[\]] return yytext[0];
 
 %%
