@@ -12,12 +12,9 @@
 #include "stringtab.h"
 #include "utilities.h"
 
-#define YY_DECL int cool_yylex(void)
-extern int cool_yylex();
-
 /* The compiler assumes these identifiers. */
 #define yylval cool_yylval
-// #define yylex  cool_yylex
+#define yylex  cool_yylex
 
 /* Max size of string constants */
 #define MAX_STR_CONST 1025
@@ -52,36 +49,21 @@ extern YYSTYPE cool_yylval;
  * Define names for regular expressions here.
  */
 
+COMMENT_S \(\*
+COMMENT_E \*\)
+
 DARROW    =>
 ASSIGN    <-
 LE        <=
 
-CLASS     class
-IF        if
-FI        fi
-ELSE      else
-INHERITS  inherits
-LOOP      loop
-POOL      pool
-THEN      then
-WHILE     while
-CASE      case
-ESAC      esac
-OF        of
-NEW       new
-ISVOID    isvoid
-
-BOOL_CONST true|false
-
-
 capital   [A-Z]
 lower     [a-z]
-number    [0-9]
+digit     [0-9]
 alpha     {capital}|{lower}
-alnum     {alpha}|{number}
+aldig     {alpha}|{digit}
+aldig_    {aldig}|_
 
-TYPEID    {capital}{alnum}*
-OBJECTID  {lower}{alnum}*
+number    {digit}+
 
 %%
 
@@ -89,37 +71,49 @@ OBJECTID  {lower}{alnum}*
   *  Nested comments
   */
 
+--.*          {}
+
+{COMMENT_S}.* {}
+{COMMENT_E} {}
+
 
  /*
   *  The multiple-character operators.
   */
-{DARROW}  { return (DARROW); }
-{ASSIGN}  { return (ASSIGN); }
-{LE}      { return (LE); }
+{DARROW}    return DARROW;
+{ASSIGN}    return ASSIGN;
+{LE}        return LE;
 
  /*
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
 
-{CLASS}       { return (CLASS); }
-{IF}          { return (IF); }
-{FI}          { return (IF); }
-{ELSE}        { return (ELSE); }
-{INHERITS}    { return (INHERITS); }
-{LOOP}        { return (LOOP); }
-{POOL}        { return (POOL); }
-{THEN}        { return (THEN); }
-{WHILE}       { return (WHILE);}
-{CASE}        { return (CASE); }
-{ESAC}        { return (ESAC); }
-{OF}          { return (OF); }
-{NEW}         { return (NEW); }
-{ISVOID}      { return (ISVOID); }
-{BOOL_CONST}  { return (BOOL_CONST); }
+(?i:class)       return CLASS;
+(?i:if)          return IF;
+(?i:fi)          return IF;
+(?i:else)        return ELSE;
+(?i:inherits)    return INHERITS;
+(?i:loop)        return LOOP;
+(?i:pool)        return POOL;
+(?i:then)        return THEN;
+(?i:while)       return WHILE;
+(?i:case)        return CASE;
+(?i:esac)        return ESAC;
+(?i:of)          return OF;
+(?i:new)         return NEW;
+(?i:isvoid)      return ISVOID;
 
-{TYPEID}      { return (TYPEID); }
-{OBJECTID}    { return (OBJECTID); }
+true|false  { return BOOL_CONST; }
+SELF_TYPE   { printf("#SELF_TYPE"); }
+
+{number}          {
+  yylval.symbol = inttable.add_string(yytext);
+  return INT_CONST;
+}
+
+{capital}{aldig_}+ {printf("#TYPEID ");}
+{lower}{aldig_}+  {printf("#OBJECTID ");}
 
  /*
   *  String constants (C syntax)
@@ -128,6 +122,8 @@ OBJECTID  {lower}{alnum}*
   *
   */
 
-[0-9] {printf("digit");}
+\n       { curr_lineno++; }
+\[tbf]   { return printf("%s",yylex); }
+\\w      { return printf("%s",yylex); }
 
 %%

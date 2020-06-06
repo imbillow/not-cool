@@ -36,7 +36,7 @@ public:
 
   // is string argument equal to the str of this Entry?
   int equal_string(char *s, int len) const;  
-                         
+
   // is the integer argument equal to the index of this Entry?
   bool equal_index(int ind) const           { return ind == index; }
 
