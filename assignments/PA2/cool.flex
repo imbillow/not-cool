@@ -8,6 +8,8 @@
  * to the code in the file.  Don't remove anything that was here initially
  */
 %{
+#include <sstream>
+#include <cstring>
 #include "cool-parse.h"
 #include "stringtab.h"
 #include "utilities.h"
@@ -43,11 +45,51 @@ extern YYSTYPE cool_yylval;
  *  Add Your own definitions here
  */
 
+char* unescape_string(const char *s)
+{
+  std::stringstream ss{};
+  bool escape{false};
+  while (*s) {
+    switch (*s) {
+      case '\\' :
+        if(escape){
+          ss << '\\';
+          escape = false;
+        } else {
+          escape = true;
+        }
+        break;
+      case 'n':
+        if (!escape){
+          ss << 'n';
+        } else {
+          ss << '\n';
+        }
+        escape = false;
+        break;
+      case '\0':
+        return nullptr;
+        break;
+      default:
+        escape = false;
+        ss << *s;
+        break;
+    }
+    s++;
+  }
+
+  std::string str = ss.str();
+  return strdup(str.c_str());
+}
+
 %}
 
 /*
  * Define names for regular expressions here.
  */
+
+%Start COMMENT
+
 
 COMMENT_S \(\*
 COMMENT_E \*\)
@@ -142,12 +184,12 @@ f(?i:alse) {
 [ \t\b\f] ;
 
 \'.\' {
-  yylval.symbol = stringtable.add_string(yytext);
+  yylval.symbol = stringtable.add_string(unescape_string(yytext));
   return STR_CONST;
 }
 
 \"[^\n\0]+\" {
-  yylval.symbol = stringtable.add_string(yytext);
+  yylval.symbol = stringtable.add_string(unescape_string(yytext));
   return STR_CONST;
 }
 
