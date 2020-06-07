@@ -313,7 +313,7 @@ f(?i:alse) {
   }
 }
 
-<STRING>\n {
+<STRING>{aldig_}*\n {
   curr_lineno++;
   yylval.error_msg = "Unterminated string constant";
   //printf("strbuf %s\n",string_buf);
@@ -351,7 +351,7 @@ f(?i:alse) {
 
 \n curr_lineno++;
 
-[ \t\b\f] ;
+[ \t\b\f\13\15] ;
 
 [!#$%^&_>?`\[\]\\|] {
   yylval.error_msg = yytext;
