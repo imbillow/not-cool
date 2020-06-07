@@ -11,6 +11,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cstring>
+#include <cctype>
 #include "cool-parse.h"
 #include "stringtab.h"
 #include "utilities.h"
@@ -215,6 +216,7 @@ character [^"\0\n\\]
 (?i:of)          return OF;
 (?i:new)         return NEW;
 (?i:isvoid)      return ISVOID;
+(?i:not)         return NOT;
 
 t(?i:rue) {
   yylval.boolean = true;
@@ -278,7 +280,7 @@ f(?i:alse) {
   string_buf_ptr = string_buf;
 }
 
-<STRING>{character}*\\(.|\n) {
+<STRING>{character}*\\[^\0] {
   char* ptr = strchr(yytext, '\\');
   char* ch = ptr+1;
   char* outp;
@@ -309,7 +311,7 @@ f(?i:alse) {
   return ERROR;
 }
 
-<STRING>\0{character}*(\"|\n) {
+<STRING>\\?\0{character}*(\"|\n) {
   yylval.error_msg = "String contains null character";
   BEGIN 0;
   clear_buf();
@@ -329,15 +331,24 @@ f(?i:alse) {
   string_buf_ptr += yyleng;
 }
 
-[(){}<>=:,;@+\-*/~.\[\]] return yytext[0];
+[(){}<=:,;@+\-*/~.] return *yytext;
 
 \n curr_lineno++;
 
 [ \t\b\f] ;
 
-[_] {
+[!#$%^&_>?`\[\]\\|] {
   yylval.error_msg = yytext;
   return ERROR;
+}
+
+. {
+  if(!std::isprint(*yytext)){
+    yylval.error_msg = yytext;
+    return ERROR;
+  } else {
+    return *yytext;
+  }
 }
 
 %%
