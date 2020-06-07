@@ -53,6 +53,7 @@ extern YYSTYPE cool_yylval;
  */
 
 int comment_nested;
+bool string_too_long{false};
 
 char* unescape_string(const char *s)
 {
@@ -257,22 +258,27 @@ f(?i:alse) {
 
 <STRING>{character}*\" {
   BEGIN 0;
-
   auto sz = string_buf_ptr - string_buf;
-  if(sz + yyleng > MAX_STR_CONST){
-    yylval.error_msg = "String constant too long";
-    return ERROR;
+  if(sz + yyleng -1 >= MAX_STR_CONST){
+    string_too_long = true;
   }
 
-  char* str = strdup(yytext);
-  str[yyleng-1] = '\0';
-  strcat(string_buf, str);
-  string_buf_ptr += yyleng - 1;
-  sz = string_buf_ptr - string_buf;
+  if(string_too_long){
+    string_too_long = false;
+    yylval.error_msg = "String constant too long";
+    clear_buf();
+    return ERROR;
+  } else {
+    char* str = strdup(yytext);
+    str[yyleng-1] = '\0';
+    strcat(string_buf, str);
+    string_buf_ptr += yyleng - 1;
+    sz = string_buf_ptr - string_buf;
 
-  yylval.symbol = stringtable.add_string(string_buf);
-  clear_buf();
-  return STR_CONST;
+    yylval.symbol = stringtable.add_string(string_buf);
+    clear_buf();
+    return STR_CONST;
+  }
 }
 
 \" {
@@ -296,10 +302,15 @@ f(?i:alse) {
     default:
       outp = ch;
   }
-  size_t  sz = ptr-yytext;
-  strncat(string_buf, yytext, sz);
-  strcat(string_buf, outp);
-  string_buf_ptr += sz + 1;
+  auto sz = string_buf_ptr - string_buf;
+  if(sz + yyleng - 1 >= MAX_STR_CONST){
+    string_too_long = true;
+  } else {
+    sz = ptr - yytext;
+    strncat(string_buf, yytext, sz);
+    strcat(string_buf, outp);
+    string_buf_ptr += sz + 1;
+  }
 }
 
 <STRING>\n {
@@ -327,8 +338,13 @@ f(?i:alse) {
 
 <STRING>{character}+ {
   //printf("text %s\n",yytext);
-  strcat(string_buf, yytext);
-  string_buf_ptr += yyleng;
+  auto sz = string_buf_ptr - string_buf;
+  if(sz + yyleng >= MAX_STR_CONST){
+    string_too_long = true;
+  } else {
+    strcat(string_buf, yytext);
+    string_buf_ptr += yyleng;
+  }
 }
 
 [(){}<=:,;@+\-*/~.] return *yytext;
