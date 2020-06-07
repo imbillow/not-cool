@@ -163,13 +163,13 @@ character [^"\0\n\\]
 <COMMENT>.+ ;
 
 <COMMENT><<EOF>> {
-  yylval.error_msg = "‘EOF in comment";
+  yylval.error_msg = "EOF in comment";
   BEGIN 0;
   return ERROR;
 }
 
 {COMMENT_E} {
-  yylval.error_msg = "‘Unmatched *)";
+  yylval.error_msg = "Unmatched *)";
   return ERROR;
 }
 
@@ -264,8 +264,9 @@ f(?i:alse) {
   string_buf_ptr = string_buf;
 }
 
-<STRING>\\(.|\n) {
-  char* ch = yytext+1;
+<STRING>{character}*\\(.|\n) {
+  char* ptr = strchr(yytext, '\\');
+  char* ch = ptr+1;
   char* outp;
   switch(*ch){
     case 'n': outp = "\n"; break;
@@ -279,8 +280,10 @@ f(?i:alse) {
     default:
       outp = ch;
   }
+  size_t  sz = ptr-yytext;
+  strncat(string_buf, yytext, sz);
   strcat(string_buf, outp);
-  string_buf_ptr++;
+  string_buf_ptr += sz + 1;
 }
 
 <STRING>\n {
