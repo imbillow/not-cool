@@ -118,11 +118,13 @@ char* unescape_string(const char *s)
  */
 
 %Start COMMENT
+%Start COMMENT_INLINE
 %Start STRING
 
 
 COMMENT_S \(\*
 COMMENT_E \*\)
+COMMENT_INLINE_BEGIN --
 
 DARROW    =>
 ASSIGN    <-
@@ -141,16 +143,25 @@ character [^"\0\n\\]
 
 %%
 
---.* ;
+<COMMENT_INLINE>.* ;
+
+<COMMENT_INLINE>\n {
+  BEGIN 0;
+  curr_lineno++;
+}
 
  /*
   *  Nested comments
   */
 
+<COMMENT_INLINE>{COMMENT_S} ;
 {COMMENT_S} {
-  comment_nested ++;
+  comment_nested++;
   BEGIN COMMENT;
 }
+
+<COMMENT>{COMMENT_INLINE_BEGIN} ;
+{COMMENT_INLINE_BEGIN} BEGIN COMMENT_INLINE;
 
 <COMMENT>.*{COMMENT_E}{space}* {
   comment_nested--;
@@ -160,7 +171,7 @@ character [^"\0\n\\]
   }
 }
 
-<COMMENT>.+ ;
+<COMMENT>[^ \t\n]+ ;
 
 <COMMENT><<EOF>> {
   yylval.error_msg = "EOF in comment";
@@ -320,5 +331,10 @@ f(?i:alse) {
 \n curr_lineno++;
 
 [ \t\b\f] ;
+
+[_] {
+  yylval.error_msg = yytext;
+  return ERROR;
+}
 
 %%
