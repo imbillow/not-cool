@@ -163,7 +163,7 @@ character [^"\0\n\\]
 <COMMENT>{COMMENT_INLINE_BEGIN} ;
 {COMMENT_INLINE_BEGIN} BEGIN COMMENT_INLINE;
 
-<COMMENT>.*{COMMENT_E}{space}* {
+<COMMENT>{COMMENT_E} {
   comment_nested--;
   if(comment_nested <= 0){
     BEGIN 0;
@@ -171,7 +171,10 @@ character [^"\0\n\\]
   }
 }
 
-<COMMENT>[^ \t\n]+ ;
+<COMMENT>[^ \t\n*()]+ ;
+<COMMENT>\* ;
+<COMMENT>\( ;
+<COMMENT>\) ;
 
 <COMMENT><<EOF>> {
   yylval.error_msg = "EOF in comment";
