@@ -148,6 +148,9 @@
   %type <expressions> expressions;
   %type <expression> expression;
 
+  %type <case_> case;
+  %type <cases> cases;
+
 
 %%
   /* Save the root of the abstract syntax tree in a global variable. */
@@ -175,63 +178,91 @@ class
 /* Feature list may be empty, but no empty features in list. */
 dummy_feature_list
 : { $$ = nil_Features(); } 	/* empty */
-| feature ';' {}
-| dummy_feature_list ';' feature {}
+| feature ';'
+  { $$ = single_Features($1); }
+| dummy_feature_list ';' feature
+  { $$ = append_Features($1, single_Features($3)); }
 ;
 
 feature
-: {}
-| OBJECTID '(' formals ')' ':' TYPEID '{' expression '}'
+: OBJECTID '(' formals ')' ':' TYPEID '{' expression '}'
+  { $$ = method($1, $3, $6, $8); }
 | OBJECTID ':' TYPEID ';'
+  { $$ = attr($1, $3, null); }
 | OBJECTID ':' TYPEID ASSIGN expression ';'
+  { $$ = attr($1, $3, $5); }
 ;
 
 formals
-:
+: { $$ = nil_Formals(); }
 | formal
+  { $$ = single_Formals($1); }
 | formals ',' formal
+  { $$ = append_Formals($1, single_Formals($3)); }
 ;
 
 formal
-: OBJECTID ':' TYPEID {}
+: OBJECTID ':' TYPEID { $$ = formal($1, $3); }
 ;
 
 expressions
-: /*  empty  */
+: { $$ = nil_Expressions(); }
 | expression ';'
-| expressions expressions ';'
+  { $$ = single_Expressions($1); }
+| expressions expression ';'
+  { $$ = append_Expressions($1, single_Expressions($2)); }
 ;
 
 expression
-: OBJECTID ASSIGN expression { $$ = $3; }
+: OBJECTID ASSIGN expression
+  { $$ = assign($1, $3); }
 | expression '.' OBJECTID '(' expressions ')'
+  { $$ = dispatch($1, $3, $5); }
 | expression '@' TYPEID '.' OBJECTID '(' expressions ')'
+  { $$ = static_dispatch($1, $3, $5, $7); }
 | OBJECTID '(' expressions ')'
+  { /*TODO: ??*/ }
 | IF expression THEN expression ELSE expression FI
+  { $$ = cond($2, $4, $6); }
 | WHILE expression LOOP expression POOL
-| blockExpr
+  { $$ = loop($2, $4); }
+| '{' expressions '}'
+  { $$ = block($2); }
 | letExpr
-| caseExpr
+| CASE expression OF cases ESAC
+  { $$ = typcase($2, $4); }
 | NEW TYPEID
+  { $$ = new_($2); }
 | ISVOID expression
+  { $$ = isvoid($2); }
 | expression '+' expression
+  { $$ = plus($1, $3); }
 | expression '-' expression
+  { $$ = sub($1, $3); }
 | expression '*' expression
+  { $$ = mul($1, $3); }
 | expression '/' expression
+  { $$ = divide($1, $3); }
 | '~' expression
+  { $$ = neg($2); }
 | expression '<' expression
+  { $$ = lt($1, $3); }
 | expression LE expression
+  { $$ = leq($1, $3); }
 | expression '=' expression
+  { $$ = eq($1, $3); }
 | NOT expression
+  { $$ = comp($2); /*TODO: maybe not*/ }
 | '(' expression ')'
+  { $$ = $2; }
 | OBJECTID
+  { $$ = object($1); }
 | INT_CONST
+  { $$ = int_const($1); }
 | STR_CONST
+  { $$ = string_const($1); }
 | BOOL_CONST
-;
-
-blockExpr: expression ';'
-| blockExpr expression ';'
+  { $$ = bool_const($1); }
 ;
 
 letExpr
@@ -248,17 +279,16 @@ bindPair
 | formal ASSIGN expression
 ;
 
-caseExpr
-: CASE expression OF matchArms ESAC
+cases
+: case ';'
+  { $$ = single_Cases($1); }
+| cases case ';'
+  { $$ = append_Cases($1, single_Cases($2)); }
 ;
 
-matchArms
-: matchArm ';'
-| matchArms matchArm ';'
-;
-
-matchArm
-: formal DARROW expression
+case
+: OBJECTID ':' TYPEID DARROW expression
+  { $$ = branch($1, $3, $5); }
 ;
 
 
