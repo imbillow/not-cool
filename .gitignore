@@ -733,3 +733,8 @@ hs_err_pid*
 
 .classpath
 .project
+cool-parse.cc
+parser
+lexer
+AbstractTable.java
+Lexer.java

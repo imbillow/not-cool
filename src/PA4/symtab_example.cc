@@ -1,20 +1,22 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <symtab.h>
 
-int main(int argc, char *argv[]) {
-  // 
+int
+main(int argc, char* argv[])
+{
+  //
   // Create a mapping from strings to ints
   //
 
-  SymbolTable<char *,int> *map = new SymbolTable<char *, int>();
-  char *Fred = "Fred";
-  char *Mary = "Mary";
-  char *Miguel = "Miguel";
+  SymbolTable<char*, int>* map = new SymbolTable<char*, int>();
+  char* Fred = "Fred";
+  char* Mary = "Mary";
+  char* Miguel = "Miguel";
 
   // enter a scope; required before any symbols can be added
   map->enterscope();
-  
+
   // add a couple of entries mapping name to age.
   // note the second argument must be a pointer to an integer
   map->addid(Fred, new int(22));
@@ -51,5 +53,4 @@ int main(int argc, char *argv[]) {
   cout << ((map->lookup(Miguel) != NULL) ? "Yes\n" : "No\n");
 
   return 0;
- 
 }

@@ -4,11 +4,12 @@
 //
 #include "copyright.h"
 
-#include <assert.h>
-#include "stringtab_functions.h"
 #include "stringtab.h"
+#include "stringtab_functions.h"
+#include <assert.h>
 
-extern char *pad(int n);
+extern char*
+pad(int n);
 
 //
 // Explicit template instantiations.
@@ -18,39 +19,47 @@ template class StringTable<IdEntry>;
 template class StringTable<StringEntry>;
 template class StringTable<IntEntry>;
 
-Entry::Entry(char *s, int l, int i) : len(l), index(i) {
-  str = new char [len+1];
+Entry::Entry(char* s, int l, int i)
+  : len(l)
+  , index(i)
+{
+  str = new char[len + 1];
   strncpy(str, s, len);
   str[len] = '\0';
 }
 
-int Entry::equal_string(char *string, int length) const
+int
+Entry::equal_string(char* string, int length) const
 {
-  return (len == length) && (strncmp(str,string,len) == 0);
+  return (len == length) && (strncmp(str, string, len) == 0);
 }
 
-ostream& Entry::print(ostream& s) const
+ostream&
+Entry::print(ostream& s) const
 {
   return s << "{" << str << ", " << len << ", " << index << "}\n";
 }
 
-ostream& operator<<(ostream& s, const Entry& sym) 
+ostream&
+operator<<(ostream& s, const Entry& sym)
 {
   return s << sym.get_string();
 }
 
-
-ostream& operator<<(ostream& s, Symbol sym)
+ostream&
+operator<<(ostream& s, Symbol sym)
 {
   return s << *sym;
 }
 
-char *Entry::get_string() const
+char*
+Entry::get_string() const
 {
   return str;
 }
 
-int Entry::get_len() const
+int
+Entry::get_len() const
 {
   return len;
 }
@@ -60,19 +69,27 @@ int Entry::get_len() const
 // The APS package requires that copy and print (called dump) functions
 // be defined for components of the abstract syntax tree.
 //
-Symbol copy_Symbol(const Symbol s)
+Symbol
+copy_Symbol(const Symbol s)
 {
   return s;
 }
 
-void dump_Symbol(ostream& s, int n, Symbol sym)
+void
+dump_Symbol(ostream& s, int n, Symbol sym)
 {
   s << pad(n) << sym << endl;
 }
 
-StringEntry::StringEntry(char *s, int l, int i) : Entry(s,l,i) { }
-IdEntry::IdEntry(char *s, int l, int i) : Entry(s,l,i) { }
-IntEntry::IntEntry(char *s, int l, int i) : Entry(s,l,i) { }
+StringEntry::StringEntry(char* s, int l, int i)
+  : Entry(s, l, i)
+{}
+IdEntry::IdEntry(char* s, int l, int i)
+  : Entry(s, l, i)
+{}
+IntEntry::IntEntry(char* s, int l, int i)
+  : Entry(s, l, i)
+{}
 
 IdTable idtable;
 IntTable inttable;

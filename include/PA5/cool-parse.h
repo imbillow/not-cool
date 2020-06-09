@@ -14,34 +14,36 @@
 /* a type renaming */
 typedef int Boolean;
 class Entry;
-typedef Entry *Symbol;
+typedef Entry* Symbol;
 
 Boolean copy_Boolean(Boolean);
 void assert_Boolean(Boolean);
-void dump_Boolean(ostream &,int,Boolean);
+void
+dump_Boolean(ostream&, int, Boolean);
 
 Symbol copy_Symbol(Symbol);
 void assert_Symbol(Symbol);
-void dump_Symbol(ostream &,int,Symbol);
+void
+dump_Symbol(ostream&, int, Symbol);
 
 #endif
 #include "tree.h"
-typedef class Program_class *Program;
-typedef class Class__class *Class_;
-typedef class Feature_class *Feature;
-typedef class Formal_class *Formal;
-typedef class Expression_class *Expression;
-typedef class Case_class *Case;
+typedef class Program_class* Program;
+typedef class Class__class* Class_;
+typedef class Feature_class* Feature;
+typedef class Formal_class* Formal;
+typedef class Expression_class* Expression;
+typedef class Case_class* Case;
 typedef list_node<Class_> Classes_class;
-typedef Classes_class *Classes;
+typedef Classes_class* Classes;
 typedef list_node<Feature> Features_class;
-typedef Features_class *Features;
+typedef Features_class* Features;
 typedef list_node<Formal> Formals_class;
-typedef Formals_class *Formals;
+typedef Formals_class* Formals;
 typedef list_node<Expression> Expressions_class;
-typedef Expressions_class *Expressions;
+typedef Expressions_class* Expressions;
 typedef list_node<Case> Cases_class;
-typedef Cases_class *Cases;
+typedef Cases_class* Cases;
 /* A Bison parser, made by GNU Bison 2.3.  */
 
 /* Skeleton interface for Bison's Yacc-like parsers in C
@@ -79,38 +81,39 @@ typedef Cases_class *Cases;
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     CLASS = 258,
-     ELSE = 259,
-     FI = 260,
-     IF = 261,
-     IN = 262,
-     INHERITS = 263,
-     LET = 264,
-     LOOP = 265,
-     POOL = 266,
-     THEN = 267,
-     WHILE = 268,
-     CASE = 269,
-     ESAC = 270,
-     OF = 271,
-     DARROW = 272,
-     NEW = 273,
-     ISVOID = 274,
-     STR_CONST = 275,
-     INT_CONST = 276,
-     BOOL_CONST = 277,
-     TYPEID = 278,
-     OBJECTID = 279,
-     ASSIGN = 280,
-     NOT = 281,
-     LE = 282,
-     ERROR = 283,
-     LET_STMT = 285
-   };
+#define YYTOKENTYPE
+/* Put the tokens into the symbol table, so that GDB and other debuggers
+   know about them.  */
+enum yytokentype
+{
+  CLASS = 258,
+  ELSE = 259,
+  FI = 260,
+  IF = 261,
+  IN = 262,
+  INHERITS = 263,
+  LET = 264,
+  LOOP = 265,
+  POOL = 266,
+  THEN = 267,
+  WHILE = 268,
+  CASE = 269,
+  ESAC = 270,
+  OF = 271,
+  DARROW = 272,
+  NEW = 273,
+  ISVOID = 274,
+  STR_CONST = 275,
+  INT_CONST = 276,
+  BOOL_CONST = 277,
+  TYPEID = 278,
+  OBJECTID = 279,
+  ASSIGN = 280,
+  NOT = 281,
+  LE = 282,
+  ERROR = 283,
+  LET_STMT = 285
+};
 #endif
 /* Tokens.  */
 #define CLASS 258
@@ -141,10 +144,7 @@ typedef Cases_class *Cases;
 #define ERROR 283
 #define LET_STMT 285
 
-
-
-
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 #line 46 "cool.y"
 {
@@ -161,19 +161,19 @@ typedef union YYSTYPE
   Cases cases;
   Expression expression;
   Expressions expressions;
-  char *error_msg;
+  char* error_msg;
 }
 /* Line 1489 of yacc.c.  */
 #line 124 "cool.tab.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
+YYSTYPE;
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE cool_yylval;
 
-#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+#if !defined YYLTYPE && !defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
 {
   int first_line;
@@ -181,9 +181,9 @@ typedef struct YYLTYPE
   int last_line;
   int last_column;
 } YYLTYPE;
-# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
+#define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+#define YYLTYPE_IS_DECLARED 1
+#define YYLTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYLTYPE cool_yylloc;
