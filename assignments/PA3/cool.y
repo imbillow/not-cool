@@ -188,7 +188,7 @@ feature
 : OBJECTID '(' formals ')' ':' TYPEID '{' expression '}'
   { $$ = method($1, $3, $6, $8); }
 | OBJECTID ':' TYPEID ';'
-  { $$ = attr($1, $3, null); }
+  { $$ = attr($1, $3, no_expr()); }
 | OBJECTID ':' TYPEID ASSIGN expression ';'
   { $$ = attr($1, $3, $5); }
 ;
@@ -221,14 +221,15 @@ expression
 | expression '@' TYPEID '.' OBJECTID '(' expressions ')'
   { $$ = static_dispatch($1, $3, $5, $7); }
 | OBJECTID '(' expressions ')'
-  { /*TODO: ??*/ }
+  { $$ = dispatch(object(idtable.add_string("self")), $1, $3); }
 | IF expression THEN expression ELSE expression FI
   { $$ = cond($2, $4, $6); }
 | WHILE expression LOOP expression POOL
   { $$ = loop($2, $4); }
 | '{' expressions '}'
   { $$ = block($2); }
-| letExpr
+| LET OBJECTID ':' TYPEID ASSIGN expression IN expression
+  { $$ = let($2, $4, $6, $8); /*TODO: nested*/ }
 | CASE expression OF cases ESAC
   { $$ = typcase($2, $4); }
 | NEW TYPEID
@@ -252,7 +253,7 @@ expression
 | expression '=' expression
   { $$ = eq($1, $3); }
 | NOT expression
-  { $$ = comp($2); /*TODO: maybe not*/ }
+  { $$ = comp($2); }
 | '(' expression ')'
   { $$ = $2; }
 | OBJECTID
@@ -263,20 +264,6 @@ expression
   { $$ = string_const($1); }
 | BOOL_CONST
   { $$ = bool_const($1); }
-;
-
-letExpr
-: LET bindPairs IN expression
-;
-
-bindPairs
-: bindPair
-| bindPairs ',' bindPair
-;
-
-bindPair
-: formal
-| formal ASSIGN expression
 ;
 
 cases
