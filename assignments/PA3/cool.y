@@ -28,7 +28,7 @@
   extern int node_lineno;
 
   #define YYLLOC_DEFAULT(Current, Rhs, N) \
-    Current = Rhs[1]; \
+    Current = Rhs[N]; \
     node_lineno = Current;
 
   #define SET_NODELOC(Current)  \
@@ -172,38 +172,47 @@ program
 
 class_list
 : class	/* single class */
-  { $$ = single_Classes($1);
+  { @$ = @1;
+    $$ = single_Classes($1);
     parse_results = $$; }
 | class_list class	/* several classes */
-  { $$ = append_Classes($1,single_Classes($2));
+  { @$ = @2;
+    $$ = append_Classes($1,single_Classes($2));
     parse_results = $$; }
 ;
 
 /* If no parent is specified, the class inherits from the Object class. */
 class
 : CLASS TYPEID '{' dummy_feature_list '}' ';'
-  { $$ = class_($2,idtable.add_string("Object"),$4,
+  { @$ = @6;
+    $$ = class_($2,idtable.add_string("Object"),$4,
     stringtable.add_string(curr_filename)); }
 | CLASS TYPEID INHERITS TYPEID '{' dummy_feature_list '}' ';'
-  { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
+  { @$ = @8;
+    $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
 ;
 
 /* Feature list may be empty, but no empty features in list. */
 dummy_feature_list
 : { $$ = nil_Features(); } 	/* empty */
 | feature ';'
-  { $$ = single_Features($1); }
+  { @$ = @2;
+    $$ = single_Features($1); }
 | dummy_feature_list ';' feature
-  { $$ = append_Features($1, single_Features($3)); }
+  { @$ = @3;
+    $$ = append_Features($1, single_Features($3)); }
 ;
 
 feature
 : OBJECTID '(' formals ')' ':' TYPEID '{' expression '}'
-  { $$ = method($1, $3, $6, $8); }
+  { @$ = @9;
+    $$ = method($1, $3, $6, $8); }
 | OBJECTID ':' TYPEID ';'
-  { $$ = attr($1, $3, no_expr()); }
+  { @$ = @4;
+    $$ = attr($1, $3, no_expr()); }
 | OBJECTID ':' TYPEID ASSIGN expression ';'
-  { $$ = attr($1, $3, $5); }
+  { @$ = @6;
+    $$ = attr($1, $3, $5); }
 ;
 
 formals
@@ -211,26 +220,33 @@ formals
 | formal
   { $$ = single_Formals($1); }
 | formals ',' formal
-  { $$ = append_Formals($1, single_Formals($3)); }
+  { @$ = @3;
+    $$ = append_Formals($1, single_Formals($3)); }
 ;
 
 formal
-: OBJECTID ':' TYPEID { $$ = formal($1, $3); }
+: OBJECTID ':' TYPEID
+  { @$ = @3;
+    $$ = formal($1, $3); }
 ;
 
 expressions
 : { $$ = nil_Expressions(); }
 | expression ';'
-  { $$ = single_Expressions($1); }
+  { @$ = @2;
+    $$ = single_Expressions($1); }
 | expressions expression ';'
-  { $$ = append_Expressions($1, single_Expressions($2)); }
+  { @$ = @3;
+    $$ = append_Expressions($1, single_Expressions($2)); }
 ;
 
 letInner
 : OBJECTID ':' TYPEID IN expression
-  { $$ = let($1, $3, no_expr(), $5); }
+  { @$ = @5;
+    $$ = let($1, $3, no_expr(), $5); }
 | OBJECTID ':' TYPEID ASSIGN expression IN expression
-  { $$ = let($1, $3, $5, $7); }
+  { @$ = @7;
+    $$ = let($1, $3, $5, $7); }
 | OBJECTID ':' TYPEID ',' letInner
   { $$ = let($1, $3, no_expr(), $5); }
 | OBJECTID ':' TYPEID ASSIGN expression ',' letInner
