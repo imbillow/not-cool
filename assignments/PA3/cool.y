@@ -144,6 +144,7 @@
   %type <formal> formal;
 
   %type <expressions> expressions;
+  %type <expressions> argList;
   %type <expression> expression;
   %type <expression> letInner;
 
@@ -240,14 +241,35 @@ letInner
   { $$ = let($1, $3, $5, $7); }
 ;
 
+cases
+: case ';'
+  { $$ = single_Cases($1); }
+| cases case ';'
+  { $$ = append_Cases($1, single_Cases($2)); }
+;
+
+case
+: OBJECTID ':' TYPEID DARROW expression
+  { $$ = branch($1, $3, $5); }
+;
+
+argList
+: /* empty */
+  { $$ = nil_Expressions(); }
+| expression
+  { $$ = single_Expressions($1); }
+| argList ',' expression
+  { $$ = append_Expressions($1, single_Expressions($3)); }
+;
+
 expression
 : OBJECTID ASSIGN expression
   { $$ = assign($1, $3); }
-| expression '.' OBJECTID '(' expressions ')'
+| expression '.' OBJECTID '(' argList ')'
   { $$ = dispatch($1, $3, $5); }
-| expression '@' TYPEID '.' OBJECTID '(' expressions ')'
+| expression '@' TYPEID '.' OBJECTID '(' argList ')'
   { $$ = static_dispatch($1, $3, $5, $7); }
-| OBJECTID '(' expressions ')'
+| OBJECTID '(' argList ')'
   { $$ = dispatch(object(idtable.add_string("self")), $1, $3); }
 | IF expression THEN expression ELSE expression FI
   { $$ = cond($2, $4, $6); }
@@ -294,19 +316,6 @@ expression
 | error
   { }
 ;
-
-cases
-: case ';'
-  { $$ = single_Cases($1); }
-| cases case ';'
-  { $$ = append_Cases($1, single_Cases($2)); }
-;
-
-case
-: OBJECTID ':' TYPEID DARROW expression
-  { $$ = branch($1, $3, $5); }
-;
-
 
 /* end of grammar */
 %%
