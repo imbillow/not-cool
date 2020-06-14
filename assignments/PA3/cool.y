@@ -140,21 +140,34 @@
   %type <features> dummy_feature_list
   %type <feature> feature
 
-  /* Precedence declarations go here. */
-
   %type <formals> formals;
   %type <formal> formal;
 
   %type <expressions> expressions;
   %type <expression> expression;
+  %type <expression> letInner;
 
   %type <case_> case;
   %type <cases> cases;
 
+  /* Precedence declarations go here. */
+  /* from https://github.com/skyzluo/CS143-Compilers-Stanford/blob/master/PA3/cool.y */
+
+  %left    ASSIGN
+  %left    NOT
+  %nonassoc '<' LE '='
+  %left '+' '-'
+  %left '*' '/'
+  %left ISVOID
+  %left '~'
+  %left  '@'
+  %left  '.'
 
 %%
-  /* Save the root of the abstract syntax tree in a global variable. */
-program	: class_list	{ @$ = @1; ast_root = program($1); }
+
+/* Save the root of the abstract syntax tree in a global variable. */
+program
+: class_list	{ @$ = @1; ast_root = program($1); }
 ;
 
 class_list
@@ -213,6 +226,17 @@ expressions
   { $$ = append_Expressions($1, single_Expressions($2)); }
 ;
 
+letInner
+: OBJECTID ':' TYPEID IN expression
+  { $$ = let($1, $3, no_expr(), $5); }
+| OBJECTID ':' TYPEID ASSIGN expression IN expression
+  { $$ = let($1, $3, $5, $7); }
+| OBJECTID ':' TYPEID ',' letInner
+  { $$ = let($1, $3, no_expr(), $5); }
+| OBJECTID ':' TYPEID ASSIGN expression ',' letInner
+  { $$ = let($1, $3, $5, $7); }
+;
+
 expression
 : OBJECTID ASSIGN expression
   { $$ = assign($1, $3); }
@@ -228,8 +252,8 @@ expression
   { $$ = loop($2, $4); }
 | '{' expressions '}'
   { $$ = block($2); }
-| LET OBJECTID ':' TYPEID ASSIGN expression IN expression
-  { $$ = let($2, $4, $6, $8); /*TODO: nested*/ }
+| LET letInner
+  {{ $$ = $2; }}
 | CASE expression OF cases ESAC
   { $$ = typcase($2, $4); }
 | NEW TYPEID
