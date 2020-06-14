@@ -144,6 +144,7 @@
   %type <formal> formal;
 
   %type <expressions> expressions;
+  %type <expressions> nonEmptyExprList;
   %type <expressions> argList;
   %type <expression> expression;
   %type <expression> letInner;
@@ -189,6 +190,7 @@ class
     stringtable.add_string(curr_filename)); }
 | CLASS TYPEID INHERITS TYPEID '{' dummy_feature_list '}' ';'
   { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
+| error
 ;
 
 /* Feature list may be empty, but no empty features in list. */
@@ -207,6 +209,8 @@ feature
   { $$ = attr($1, $3, $5); }
 | OBJECTID '(' formals ')' ':' TYPEID '{' expression '}'
   { $$ = method($1, $3, $6, $8); }
+| error
+  { }
 ;
 
 formals
@@ -228,6 +232,14 @@ expressions
   { $$ = single_Expressions($1); }
 | expressions expression ';'
   { $$ = append_Expressions($1, single_Expressions($2)); }
+;
+
+nonEmptyExprList
+: expression ';'
+  { $$ = single_Expressions($1); }
+| expressions expression ';'
+  { $$ = append_Expressions($1, single_Expressions($2)); }
+| error
 ;
 
 letInner
@@ -275,7 +287,9 @@ expression
   { $$ = cond($2, $4, $6); }
 | WHILE expression LOOP expression POOL
   { $$ = loop($2, $4); }
-| '{' expressions '}'
+| WHILE expression LOOP error
+  { }
+| '{' nonEmptyExprList '}'
   { $$ = block($2); }
 | LET letInner
   {{ $$ = $2; }}
